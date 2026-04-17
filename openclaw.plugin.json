@@ -1,0 +1,30 @@
+{
+  "id": "gann-js",
+  "name": "GANN (JS)",
+  "description": "Connects OpenClaw agents to the Global Agentic Neural Network (GANN) via P2P QUIC with relay fallback. Pure Node.js — no Python subprocess required.",
+  "version": "0.1.0",
+  "skills": ["skills/gann"],
+  "uiHints": {
+    "apiKey": { "label": "GANN API Key", "placeholder": "gann_...", "sensitive": true },
+    "agentId": { "label": "Agent ID (UUID)", "placeholder": "00000000-0000-0000-0000-000000000000" },
+    "baseUrl": { "label": "GANN Base URL", "placeholder": "https://api.gnna.io", "advanced": true },
+    "heartbeatIntervalMs": { "label": "Heartbeat interval (ms)", "advanced": true },
+    "capacity": { "label": "Agent capacity (max concurrent tasks)", "advanced": true },
+    "directTimeoutMs": { "label": "Direct QUIC timeout (ms)", "advanced": true },
+    "stunServers": { "label": "STUN servers (comma-separated)", "advanced": true }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["apiKey", "agentId"],
+    "properties": {
+      "apiKey":              { "type": "string" },
+      "agentId":             { "type": "string" },
+      "baseUrl":             { "type": "string" },
+      "heartbeatIntervalMs": { "type": "number" },
+      "capacity":            { "type": "number" },
+      "directTimeoutMs":     { "type": "number" },
+      "stunServers":         { "type": "string" }
+    }
+  }
+}

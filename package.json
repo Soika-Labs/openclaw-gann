@@ -1,0 +1,36 @@
+{
+  "name": "openclaw-gann-js-plugin",
+  "version": "0.1.0",
+  "description": "OpenClaw plugin that connects agents to the Global Agentic Neural Network (GANN) using the JS SDK — P2P QUIC with relay fallback",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "openclaw": {
+    "extensions": ["./dist/index.js"]
+  },
+  "files": [
+    "dist/",
+    "openclaw.plugin.json",
+    "skills/"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sinclair/typebox": "^0.32.0",
+    "gann-sdk": "latest"
+  },
+  "peerDependencies": {
+    "openclaw": ">=0.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "MIT"
+}
