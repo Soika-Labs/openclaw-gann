@@ -57,8 +57,8 @@ export default definePluginEntry({
     // Register tools backed by the client manager
     registerTools(api, manager);
     logger.info(
-      "[gann-js] tools registered: gann_search_agents, gann_get_schema, " +
-        "gann_open_session (optional), gann_send_message (optional)",
+      "[gann-js] tools registered: gann_register_agent (optional), gann_search_agents, " +
+        "gann_get_schema, gann_open_session (optional), gann_send_message (optional)",
     );
 
     // Lifecycle hook — clean shutdown

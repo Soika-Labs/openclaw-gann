@@ -3,6 +3,111 @@ import type { OpenClawPluginApi } from "openclaw/plugin-sdk/plugin-entry";
 import type { ClientManager } from "./client-manager.js";
 
 export function registerTools(api: OpenClawPluginApi, manager: ClientManager): void {
+  // ── 0. Register agent ────────────────────────────────────────────────
+
+  api.registerTool(
+    {
+      name: "gann_register_agent",
+      label: "Register GANN Agent",
+      description:
+        "Register a new agent on the GANN network. Returns the assigned agent_id " +
+        "which can then be used in the plugin config. The agent's input/output schema " +
+        "follows the standard GANN task_request / task_response convention by default.",
+      parameters: Type.Object({
+        agent_name: Type.String({
+          description: "Human-readable name for the agent.",
+        }),
+        description: Type.String({
+          description: "What this agent does (shown in search results).",
+        }),
+        capabilities: Type.Array(
+          Type.Object({
+            name: Type.String({ description: 'Capability tag, e.g. "general.chat", "code.review".' }),
+            description: Type.Optional(
+              Type.String({ description: "Short description of this capability." }),
+            ),
+          }),
+          { description: "At least one capability descriptor.", minItems: 1 },
+        ),
+        inputs: Type.Optional(
+          Type.Record(Type.String(), Type.Unknown(), {
+            description:
+              "JSON Schema for the agent's input format. " +
+              "If omitted, the standard task_request schema is used.",
+          }),
+        ),
+        outputs: Type.Optional(
+          Type.Record(Type.String(), Type.Unknown(), {
+            description:
+              "JSON Schema for the agent's output format. " +
+              "If omitted, the standard task_response schema is used.",
+          }),
+        ),
+        summary: Type.Optional(
+          Type.String({ description: "Short summary for UI display (~500 chars max)." }),
+        ),
+        app_id: Type.Optional(
+          Type.String({
+            description:
+              "Unique app identifier to prevent duplicate registrations per owner.",
+          }),
+        ),
+      }),
+      async execute(_id, params) {
+        const defaultInputs = {
+          type: "object",
+          properties: {
+            type: { type: "string", enum: ["task_request"], description: "Message type identifier" },
+            request_id: { type: "string", description: "Unique request identifier for tracking" },
+            task: { type: "string", description: "The question or instruction to process" },
+            asked_by: { type: "string", description: "Agent ID of the requester" },
+          },
+          required: ["type", "request_id", "task"],
+        };
+
+        const defaultOutputs = {
+          type: "object",
+          properties: {
+            type: { type: "string", enum: ["task_response"], description: "Response type identifier" },
+            request_id: { type: "string", description: "Matching request identifier" },
+            answer: { type: "string", description: "The agent's response text" },
+            error: { type: ["string", "null"], description: "Error message if failed, null on success" },
+            from: { type: "string", description: "Agent ID of the responder" },
+          },
+          required: ["type", "request_id", "answer", "from"],
+        };
+
+        const result = await manager.registerAgent({
+          agentName: params.agent_name,
+          description: params.description,
+          capabilities: params.capabilities as { name: string; description?: string }[],
+          inputs: (params.inputs as Record<string, unknown>) ?? defaultInputs,
+          outputs: (params.outputs as Record<string, unknown>) ?? defaultOutputs,
+          summary: params.summary ?? undefined,
+          appId: params.app_id ?? undefined,
+        });
+
+        return {
+          details: null,
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify(
+                {
+                  ...result,
+                  note: "Copy the agent_id into your openclaw.json config to connect this agent.",
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      },
+    },
+    { optional: true },
+  );
+
   // ── 1. Search agents ─────────────────────────────────────────────────
 
   api.registerTool({

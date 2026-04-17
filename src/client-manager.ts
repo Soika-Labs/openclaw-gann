@@ -41,6 +41,31 @@ export type SessionEntry = {
   createdAt: number;
 };
 
+// ── Registration types ───────────────────────────────────────────────
+
+export type CapabilityDescriptor = {
+  name: string;
+  description?: string;
+};
+
+export type RegisterAgentParams = {
+  agentName: string;
+  description: string;
+  capabilities: CapabilityDescriptor[];
+  inputs: Record<string, unknown>;
+  outputs: Record<string, unknown>;
+  version?: string;
+  agentType?: string;
+  summary?: string;
+  appId?: string;
+};
+
+export type RegisterAgentResponse = {
+  agent_id: string;
+  status: string;
+  heartbeat_interval: number;
+};
+
 export class ClientManager {
   private client: GannClient | null = null;
   private loadTracker: LoadTracker | null = null;
@@ -55,6 +80,50 @@ export class ClientManager {
   constructor(config: GannJsPluginConfig, logger: Logger) {
     this.config = config;
     this.logger = logger;
+  }
+
+  // ── Register agent ────────────────────────────────────────────────
+
+  /**
+   * Register a new agent on the GANN server.
+   * Calls POST /.gann/register directly (the JS SDK does not expose this).
+   * Returns the assigned agent_id and heartbeat interval.
+   */
+  async registerAgent(params: RegisterAgentParams): Promise<RegisterAgentResponse> {
+    const baseUrl = (this.config.baseUrl ?? "https://api.gnna.io").replace(/\/$/, "");
+    const url = `${baseUrl}/.gann/register`;
+
+    const body = {
+      agent_name: params.agentName,
+      version: params.version ?? "1",
+      agent_type: params.agentType ?? "agent_chat",
+      capabilities: params.capabilities,
+      inputs: params.inputs,
+      outputs: params.outputs,
+      description: params.description,
+      summary: params.summary ?? null,
+      app_id: params.appId ?? null,
+    };
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "GANN-API-KEY": this.config.apiKey,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Agent registration failed (${response.status}): ${text}`);
+    }
+
+    const result = (await response.json()) as RegisterAgentResponse;
+    this.logger.info(
+      `[gann-js] agent registered — agent_id=${result.agent_id} status=${result.status}`,
+    );
+    return result;
   }
 
   // ── Connect ──────────────────────────────────────────────────────────
